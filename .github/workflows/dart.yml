@@ -19,7 +19,7 @@ jobs:
       
 
       - run: pod repo update
-        working-directory: exemple
+        working-directory: exemple/ios
 
       - name: Update CocoaPods
         run: pod repo update
