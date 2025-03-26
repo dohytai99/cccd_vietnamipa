@@ -328,7 +328,7 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         if (!demo)
           await _nfc.connect(
               iosAlertMessage: "Hold your phone near Biometric Passport");
-              pollingOption: pollingOption
+              pollingOption: pollingOption;
 
         final passport = Passport(_nfc);
 
