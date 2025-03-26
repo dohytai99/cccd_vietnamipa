@@ -317,11 +317,18 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
+
+    // iOS 16+ requires different polling options for PACE documents
+    final pollingOption = (Platform.isIOS && await DeviceInfoPlugin().iosInfo.then((ios) => ios.systemVersion.startsWith("16") || ios.systemVersion.startsWith("17")))
+        ? (isPace ? NFCTagReaderSessionPollingOption.pace : NFCTagReaderSessionPollingOption.iso14443)
+        : NFCTagReaderSessionPollingOption.iso14443;
+      
       try {
         bool demo = false;
         if (!demo)
           await _nfc.connect(
               iosAlertMessage: "Hold your phone near Biometric Passport");
+              pollingOption: pollingOption
 
         final passport = Passport(_nfc);
 
