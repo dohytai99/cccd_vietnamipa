@@ -27,6 +27,8 @@ jobs:
 
       - run: flutter build ios --release --no-codesign
         working-directory: example
+      - run: codesign --force --entitlements ios/Runner/Entitlements.plist --sign - example/build/ios/iphoneos/Runner.app
+        working-directory: example
 
       - run: mkdir Payload
         working-directory: example/build/ios/iphoneos
