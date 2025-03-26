@@ -400,7 +400,7 @@ finally {
   else {
     await _nfc.disconnect(iosAlertMessage: formatProgressMsg("Finished", 100));
   }
-}
+
         setState(() {
           _isReading = false;
         });
