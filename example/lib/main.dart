@@ -946,7 +946,7 @@ class _MrtdHomePageState extends State<MrtdHomePage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               TextFormField(
-                enabled: !_disabledInput(),
+                enabled: true
                 controller: _can,
                 decoration: const InputDecoration(
                     border: OutlineInputBorder(),
