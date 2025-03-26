@@ -317,12 +317,15 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
-   let pollingOption: NFCTagReaderSession.PollingOption = if #available(iOS 16, *) {
-    skipPACE ? .iso14443 : .pace // pace can not be combined
-   } else {
-    .iso14443
-   }
-   readerSession = NFCTagReaderSession(pollingOption: [pollingOption], delegate: self, queue: nil)
+  final pollingOption = Platform.isIOS && (Platform.version.startsWith('16') || Platform.version.startsWith('17'))
+    ? (skipPACE ? NFCTagReaderSessionPollingOption.iso14443 : NFCTagReaderSessionPollingOption.pace)
+    : NFCTagReaderSessionPollingOption.iso14443;
+
+final readerSession = NFCTagReaderSession(
+  pollingOptions: [pollingOption], 
+  delegate: self, 
+  queue: null
+);
       
       try {
         bool demo = false;
