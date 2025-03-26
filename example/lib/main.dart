@@ -317,11 +317,12 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
-
-    // iOS 16+ requires different polling options for PACE documents
-    final pollingOption = (Platform.isIOS && await DeviceInfoPlugin().iosInfo.then((ios) => ios.systemVersion.startsWith("16") || ios.systemVersion.startsWith("17")))
-        ? (isPace ? NFCTagReaderSessionPollingOption.pace : NFCTagReaderSessionPollingOption.iso14443)
-        : NFCTagReaderSessionPollingOption.iso14443;
+   let pollingOption: NFCTagReaderSession.PollingOption = if #available(iOS 16, *) {
+    skipPACE ? .iso14443 : .pace // pace can not be combined
+   } else {
+    .iso14443
+   }
+   readerSession = NFCTagReaderSession(pollingOption: [pollingOption], delegate: self, queue: nil)
       
       try {
         bool demo = false;
