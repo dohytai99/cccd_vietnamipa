@@ -317,168 +317,90 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
-      try {
-        bool demo = false;
-        if (!demo)
-          await _nfc.connect(
-              iosAlertMessage: "Hold your phone near Biometric Passport");
+    try {
+  final nfc = NfcProvider();
+  await nfc.connect(iosAlertMessage: "Hold your iPhone near Passport");
 
-        final passport = Passport(_nfc);
+  final passport = Passport(nfc);
 
-        setState(() {
-          _alertMessage = "Reading Passport ...";
-        });
+  nfc.setIosAlertMessage("Reading EF.CardAccess ...");
+  final cardAccess = await passport.readEfCardAccess();
 
-        _nfc.setIosAlertMessage("Trying to read EF.CardAccess ...");
-        final mrtdData = MrtdData();
+  _nfc.setIosAlertMessage("Initiating session with PACE or BAC...");
+  //set MrtdData
+  mrtdData.isPACE = true; //initialize with PACE(set false if you want to do with DBA)
+  mrtdData.isDBA = accessKey.PACE_REF_KEY_TAG == 0x01 ? true : false;
 
-        try {
-          mrtdData.cardAccess = await passport.readEfCardAccess();
-        } catch(e) {
-          print('ss');
-          //if (e.code != StatusWord.fileNotFound) rethrow;
-        }
+  if (isPace) {
+    //PACE session
+    await passport.startSessionPACE(accessKey, mrtdData.cardAccess!);
+  } else {
+    //BAC session
+    await passport.startSession(accessKey as DBAKey);
+  }
 
-        _nfc.setIosAlertMessage("Trying to read EF.CardSecurity ...");
+  nfc.setIosAlertMessage(formatProgressMsg("Reading EF.COM ...", 0));
+  final efcom = await passport.readEfCOM();
 
-        try {
-          //mrtdData.cardSecurity = await passport.readEfCardSecurity();
-        } on PassportError {
-          //if (e.code != StatusWord.fileNotFound) rethrow;
-        }
+  nfc.setIosAlertMessage(formatProgressMsg("Reading Data Groups ...", 20));
+  EfDG1 dg1;
+  if (efcom.dgTags.contains(EfDG1.TAG)) {
+    dg1 = await passport.readEfDG1();
+  }
 
-        _nfc.setIosAlertMessage("Initiating session with PACE...");
-        //set MrtdData
-        mrtdData.isPACE = isPace;
-        mrtdData.isDBA = accessKey.PACE_REF_KEY_TAG == 0x01 ? true : false;
+  EfDG2 dg2;
+  if (efcom.dgTags.contains(EfDG2.TAG)) {
+    dg2 = await passport.readEfDG2();
+  }
 
-        if (isPace) {
-          //PACE session
-          await passport.startSessionPACE(accessKey, mrtdData.cardAccess!);
-        } else {
-          //BAC session
-          await passport.startSession(accessKey as DBAKey);
-        }
+  EfDG14 dg14;
+  if (efcom.dgTags.contains(EfDG14.TAG)) {
+    dg14 = await passport.readEfDG14();
+  }
 
-        _nfc.setIosAlertMessage(formatProgressMsg("Reading EF.COM ...", 0));
-        mrtdData.com = await passport.readEfCOM();
+  EfDG15 dg15;
+  Uint8List sig;
+  if (efcom.dgTags.contains(EfDG15.TAG)) {
+    dg15 = await passport.readEfDG15();
+    nfc.setIosAlertMessage(formatProgressMsg("Doing AA ...", 60));
+    sig  = await passport.activeAuthenticate(Uint8List(8));
+  }
 
-        _nfc.setIosAlertMessage(
-            formatProgressMsg("Reading Data Groups ...", 20));
+  nfc.setIosAlertMessage(formatProgressMsg("Reading EF.SOD ...", 80));
+  final sod = await passport.readEfSOD();
+}
+on Exception catch(e) {
+  final se = e.toString().toLowerCase();
+  String alertMsg = "An error has occurred while reading Passport!";
+  if (e is PassportError) {
+      if (se.contains("security status not satisfied")) {
+        alertMsg = "Failed to initiate session with passport.\nCheck input data!";
+    }
+  }
 
-        if (mrtdData.com!.dgTags.contains(EfDG1.TAG)) {
-          mrtdData.dg1 = await passport.readEfDG1();
-        }
+  if (se.contains('timeout')){
+    alertMsg = "Timeout while waiting for Passport tag";
+  }
+  else if (se.contains("tag was lost")) {
+    alertMsg = "Tag was lost. Please try again!";
+  }
+  else if (se.contains("invalidated by user")) {
+    alertMsg = "";
+  }
 
-        if (mrtdData.com!.dgTags.contains(EfDG2.TAG)) {
-          mrtdData.dg2 = await passport.readEfDG2();
-        }
-
-        // To read DG3 and DG4 session has to be established with CVCA certificate (not supported).
-        // if(mrtdData.com!.dgTags.contains(EfDG3.TAG)) {
-        //   mrtdData.dg3 = await passport.readEfDG3();
-        // }
-
-        // if(mrtdData.com!.dgTags.contains(EfDG4.TAG)) {
-        //   mrtdData.dg4 = await passport.readEfDG4();
-        // }
-
-        if (mrtdData.com!.dgTags.contains(EfDG5.TAG)) {
-          mrtdData.dg5 = await passport.readEfDG5();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG6.TAG)) {
-          mrtdData.dg6 = await passport.readEfDG6();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG7.TAG)) {
-          mrtdData.dg7 = await passport.readEfDG7();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG8.TAG)) {
-          mrtdData.dg8 = await passport.readEfDG8();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG9.TAG)) {
-          mrtdData.dg9 = await passport.readEfDG9();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG10.TAG)) {
-          mrtdData.dg10 = await passport.readEfDG10();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG11.TAG)) {
-          mrtdData.dg11 = await passport.readEfDG11();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG12.TAG)) {
-          mrtdData.dg12 = await passport.readEfDG12();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG13.TAG)) {
-          mrtdData.dg13 = await passport.readEfDG13();
-        }
-
-        if (mrtdData.com!.dgTags.contains(EfDG14.TAG)) {
-          mrtdData.dg14 = await passport.readEfDG14();
-        }
-
-        // if (mrtdData.com!.dgTags.contains(EfDG15.TAG)) {
-        //   mrtdData.dg15 = await passport.readEfDG15();
-        //   _nfc.setIosAlertMessage(formatProgressMsg("Doing AA ...", 60));
-        //   mrtdData.aaSig = await passport.activeAuthenticate(Uint8List(8));
-        // }
-
-        if (mrtdData.com!.dgTags.contains(EfDG16.TAG)) {
-          mrtdData.dg16 = await passport.readEfDG16();
-        }
-
-        _nfc.setIosAlertMessage(formatProgressMsg("Reading EF.SOD ...", 80));
-        mrtdData.sod = await passport.readEfSOD();
-
-        setState(() {
-          mrtdData.dg2?.toBytes().hex();
-          _mrtdData = mrtdData;
-        });
-
-        setState(() {
-          _alertMessage = "";
-        });
-
-        // _scrollController.animateTo(300.0,
-        //     duration: Duration(milliseconds: 500), curve: Curves.ease);
-      } on Exception catch (e) {
-        final se = e.toString().toLowerCase();
-        String alertMsg = "An error has occurred while reading Passport!";
-        if (e is PassportError) {
-          if (se.contains("security status not satisfied")) {
-            alertMsg =
-                "Failed to initiate session with passport.\nCheck input data!";
-          }
-          _log.error("PassportError: ${e.message}");
-        } else {
-          _log.error(
-              "An exception was encountered while trying to read Passport: $e");
-        }
-
-        if (se.contains('timeout')) {
-          alertMsg = "Timeout while waiting for Passport tag";
-        } else if (se.contains("tag was lost")) {
-          alertMsg = "Tag was lost. Please try again!";
-        } else if (se.contains("invalidated by user")) {
-          alertMsg = "";
-        }
-
-        setState(() {
-          _alertMessage = alertMsg;
-        });
-      } finally {
-        if (_alertMessage.isNotEmpty) {
-          await _nfc.disconnect(iosErrorMessage: _alertMessage);
-        } else {
-          await _nfc.disconnect(
-              iosAlertMessage: formatProgressMsg("Finished", 100));
-        }
+  errorAlertMsg = alertMsg;
+}
+finally {
+  if (errorAlertMsg?.isNotEmpty) {
+    await _nfc.disconnect(iosErrorMessage: errorAlertMsg);
+    if (!Platform.isIOS) {
+    // Show error to the user
+    }
+  }
+  else {
+    await _nfc.disconnect(iosAlertMessage: formatProgressMsg("Finished", 100));
+  }
+}
         setState(() {
           _isReading = false;
         });
