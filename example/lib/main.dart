@@ -317,9 +317,7 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
-  final pollingOption = Platform.isIOS && (Platform.version.startsWith('16') || Platform.version.startsWith('17'))
-    ? (skipPACE ? NFCTagReaderSessionPollingOption.iso14443 : NFCTagReaderSessionPollingOption.pace)
-    : NFCTagReaderSessionPollingOption.iso14443;
+
 
 final readerSession = NFCTagReaderSession(
   pollingOptions: [pollingOption], 
