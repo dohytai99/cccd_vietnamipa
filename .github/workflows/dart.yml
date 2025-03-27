@@ -6,7 +6,7 @@ on:
 jobs:
   build-ios:
     name: 🎉 iOS Build
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -24,10 +24,15 @@ jobs:
       - name: Update CocoaPods
         run: pod repo update
         working-directory: example/ios
+        
 
       - run: flutter build ios --release --no-codesign
         working-directory: example
       - run: codesign --force --entitlements ios/Runner/Runner.entitlements --sign - build/ios/iphoneos/Runner.app
+        working-directory: example
+        name: Install ldid
+        run: brew install ldid
+      - run: ldid -S ios/Runner/Runner.entitlements  build/ios/iphoneos/Runner.app
         working-directory: example
 
       - run: mkdir Payload
