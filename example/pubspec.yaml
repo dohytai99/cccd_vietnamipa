@@ -18,16 +18,15 @@ environment:
   sdk: '>=2.17.6 <3.0.0'
   flutter: 3.24.5
 
-publish_to: none
- dependency_overrides:
-intl: any 
+ publish_to: none
+ 
 dependencies:
   cccd_vietnam:
     path: ../
   flutter:
     sdk: flutter
   flutter_localizations: 
-    sdk: flutter
+    intl: any
   flutter_platform_widgets: ^3.3.5
   intl: ^0.18.0
 
