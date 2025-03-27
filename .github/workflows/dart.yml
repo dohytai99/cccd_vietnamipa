@@ -32,12 +32,7 @@ jobs:
         working-directory: example
       - run: codesign --force --entitlements ios/Runner/Runner.entitlements --sign - build/ios/iphoneos/Runner.app
         working-directory: example
-      - name: Install ldid & Sign App
-        working-directory: example
-        run: |
-              brew install ldid
-              ldid -S ios/Runner/Runner.entitlements build/ios/iphoneos/Runner.app
-        
+    
 
       - run: mkdir Payload
         working-directory: example/build/ios/iphoneos
