@@ -317,20 +317,11 @@ class _MrtdHomePageState extends State<MrtdHomePage>
         _alertMessage = "Waiting for Passport tag ...";
         _isReading = true;
       });
-
-
-final readerSession = NFCTagReaderSession(
-  pollingOptions: [pollingOption], 
-  delegate: self, 
-  queue: null
-);
-      
       try {
         bool demo = false;
         if (!demo)
           await _nfc.connect(
               iosAlertMessage: "Hold your phone near Biometric Passport");
-              pollingOption: pollingOption;
 
         final passport = Passport(_nfc);
 
